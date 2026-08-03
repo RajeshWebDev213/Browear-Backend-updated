@@ -1,14 +1,45 @@
 import express from "express";
 
-import { addProduct } from "../controller/productController.js";
-
+import upload from "../middleware/uploadMiddleware.js";
 import auth from "../middleware/authMiddleware.js";
 import admin from "../middleware/adminMiddleware.js";
-import upload from "../middleware/uploadMiddleware.js";
+
+import {
+  addProduct,
+  getProducts,
+  getProduct,
+  getProductsByCategory,
+  updateProduct,
+  deleteProduct,
+} from "../controller/productController.js";
 
 const router = express.Router();
 
-// Add Product (Admin)
+// Public Routes
+router.get("/", getProducts);
+
+router.get("/category/:category", getProductsByCategory);
+
+router.get("/:id", getProduct);
+
+// Update Product
+router.put(
+  "/:id",
+  auth,
+  admin,
+  upload.single("image"),
+  updateProduct
+);
+
+// Delete Product
+router.delete(
+  "/:id",
+  auth,
+  admin,
+  deleteProduct
+);
+
+// Admin Route
 router.post(
   "/",
   auth,
