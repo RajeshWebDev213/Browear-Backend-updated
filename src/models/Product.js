@@ -38,15 +38,18 @@ const productSchema = new mongoose.Schema(
         default:0,
     },
 
-    image:{
-        type:String,
-        required:true,
+   images: [
+  {
+    url: {
+      type: String,
+      required: true,
     },
-
-    public_id:{
-        type:String,
-        required:true,
+    public_id: {
+      type: String,
+      required: true,
     },
+  },
+],
 
     isAvailable:{
         type:Boolean,
