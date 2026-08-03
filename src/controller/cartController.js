@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 import Cart from "../models/Cart.js";
 import Product from "../models/Product.js";
-
+import sendOrderEmail from "../services/orderService.js";
 // ===============================
 // ADD TO CART
 // ===============================
@@ -245,15 +245,38 @@ export const removeFromCart = async (req, res) => {
 export const clearCart = async (req, res) => {
 
     try {
+// Clear Cart
+await Cart.deleteMany({
+    user: req.user._id,
+});
 
-        await Cart.deleteMany({
-            user: req.user._id,
-        });
+// Send Order Confirmation Email
+const user = await User.findById(req.user._id);
 
-        return res.status(200).json({
-            success: true,
-            message: "Cart cleared successfully",
-        });
+await sendOrderEmail(
+
+    user.email,
+
+    "Order Placed Successfully",
+
+    "Your Browear Order has been placed",
+
+    `Your order #${order._id}
+has been placed successfully.
+
+Payment Method: COD.`
+
+);
+
+return res.status(201).json({
+
+    success: true,
+
+    message: "Order placed successfully",
+
+    order,
+
+});
 
     } catch (error) {
 

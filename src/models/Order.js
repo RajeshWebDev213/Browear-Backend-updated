@@ -1,53 +1,110 @@
 import mongoose from "mongoose";
 
-const orderSchema = new mongoose.Schema(
-  {
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+const orderSchema = new mongoose.Schema({
+
+    user:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"User",
+        required:true,
     },
 
-    products: [
-      {
-        product: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Product",
-        },
+    orderItems:[
+        {
 
-        quantity: Number,
-      },
+            product:{
+                type:mongoose.Schema.Types.ObjectId,
+                ref:"Product",
+                required:true,
+            },
+
+            name:{
+                type:String,
+                required:true,
+            },
+
+            image:{
+                type:String,
+                required:true,
+            },
+
+            price:{
+                type:Number,
+                required:true,
+            },
+
+            quantity:{
+                type:Number,
+                required:true,
+            }
+
+        }
     ],
 
-    ordered_name: String,
+    shippingAddress:{
 
-    phone: String,
+        fullname:String,
 
-    city: String,
+        phone:String,
 
-    pincode: String,
+        address:String,
 
-    address: String,
+        city:String,
 
-    payment_type: {
-      type: String,
-      default: "COD",
+        state:String,
+
+        pincode:String,
+
+        country:{
+            type:String,
+            default:"India",
+        }
+
     },
 
-    total_amount: Number,
-
-    orderStatus: {
-      type: String,
-      enum: [
-        "Pending",
-        "Confirmed",
-        "Shipped",
-        "Delivered",
-        "Cancelled",
-      ],
-      default: "Pending",
+    paymentMethod:{
+        type:String,
+        enum:["COD","ONLINE"],
+        default:"COD",
     },
-  },
-  { timestamps: true }
+
+    paymentStatus:{
+        type:String,
+        enum:[
+            "Pending",
+            "Paid",
+            "Failed"
+        ],
+        default:"Pending",
+    },
+
+    orderStatus:{
+        type:String,
+        enum:[
+            "Pending",
+            "Confirmed",
+            "Shipped",
+            "Out for Delivery",
+            "Delivered",
+            "Cancelled",
+        ],
+        default:"Pending",
+    },
+
+    subtotal:Number,
+
+    discount:Number,
+
+    shipping:Number,
+
+    tax:Number,
+
+    totalPrice:Number,
+
+},{
+    timestamps:true,
+});
+
+export default mongoose.model(
+    "Order",
+    orderSchema
 );
-
-export default mongoose.model("Order", orderSchema);

@@ -6,8 +6,7 @@ import cloudinary from "../config/cloudnary.js";
 // ADD PRODUCT
 // =================================
 export const addProduct = async (req, res) => {
-    console.log("BODY:", req.body);
-console.log("FILE:", req.file);
+  
   try {
     const {
       name,
@@ -51,8 +50,12 @@ console.log("FILE:", req.file);
       price,
       discount: discount || 0,
       stock,
-      image: uploadedImage.secure_url,
-      public_id: uploadedImage.public_id,
+       images: [
+        {
+            url: uploadedImage.secure_url,
+            public_id: uploadedImage.public_id,
+        },
+    ],
     });
 
     return res.status(201).json({
@@ -112,15 +115,19 @@ export const getProducts = async (req, res) => {
             ];
         }
 
-        // Category
-        if (category) {
-            query.category = category;
-        }
+       if (category) {
+    query.category = {
+        $regex: `^${category}$`,
+        $options: "i",
+    };
+}
 
-        // Brand
-        if (brand) {
-            query.brand = brand;
-        }
+if (brand) {
+    query.brand = {
+        $regex: `^${brand}$`,
+        $options: "i",
+    };
+}
 
         // Price
         if (minPrice || maxPrice) {
@@ -265,68 +272,99 @@ export const getProductsByCategory = async (req, res) => {
 // UPDATE PRODUCT
 // =================================
 export const updateProduct = async (req, res) => {
-  try {
-    const { id } = req.params;
+    try {
 
-    let product = await Product.findById(id);
+        const { id } = req.params;
 
-    if (!product) {
-      return res.status(404).json({
-        success: false,
-        message: "Product not found",
-      });
+        const product = await Product.findById(id);
+
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: "Product not found",
+            });
+        }
+
+        // Upload new image if provided
+        if (req.file) {
+
+            // Delete old Cloudinary image
+            if (
+                product.images &&
+                product.images.length > 0
+            ) {
+                await cloudinary.uploader.destroy(
+                    product.images[0].public_id
+                );
+            }
+
+            // Upload new image
+            const uploadedImage = await uploadImage(
+                req.file.buffer
+            );
+
+            // Save new image
+            product.images = [
+                {
+                    url: uploadedImage.secure_url,
+                    public_id: uploadedImage.public_id,
+                },
+            ];
+        }
+
+        // Update other fields
+        product.name =
+            req.body.name || product.name;
+
+        product.description =
+            req.body.description ||
+            product.description;
+
+        product.category =
+            req.body.category ||
+            product.category;
+
+        product.brand =
+            req.body.brand ||
+            product.brand;
+
+        product.price =
+            req.body.price !== undefined
+                ? Number(req.body.price)
+                : product.price;
+
+        product.discount =
+            req.body.discount !== undefined
+                ? Number(req.body.discount)
+                : product.discount;
+
+        product.stock =
+            req.body.stock !== undefined
+                ? Number(req.body.stock)
+                : product.stock;
+
+        // Automatically update availability
+        product.isAvailable =
+            product.stock > 0;
+
+        await product.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Product updated successfully",
+            product,
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error",
+        });
+
     }
-
-    let image = product.image;
-    let public_id = product.public_id;
-
-    // Upload new image if provided
-    if (req.file) {
-
-      // Delete old image
-      await cloudinary.uploader.destroy(product.public_id);
-
-      const uploadedImage = await uploadImage(req.file.buffer);
-
-      image = uploadedImage.secure_url;
-      public_id = uploadedImage.public_id;
-    }
-
-    product.name = req.body.name || product.name;
-    product.description =
-      req.body.description || product.description;
-    product.category =
-      req.body.category || product.category;
-    product.brand =
-      req.body.brand || product.brand;
-    product.price =
-      req.body.price || product.price;
-    product.discount =
-      req.body.discount ?? product.discount;
-    product.stock =
-      req.body.stock ?? product.stock;
-
-    product.image = image;
-    product.public_id = public_id;
-
-    await product.save();
-
-    return res.status(200).json({
-      success: true,
-      message: "Product updated successfully",
-      product,
-    });
-
-  } catch (error) {
-
-    console.error(error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Internal Server Error",
-    });
-
-  }
 };
 // =================================
 // DELETE PRODUCT
@@ -346,7 +384,11 @@ export const deleteProduct = async (req, res) => {
     }
 
     // Delete image from Cloudinary
-    await cloudinary.uploader.destroy(product.public_id);
+    if (product.images.length > 0) {
+    await cloudinary.uploader.destroy(
+        product.images[0].public_id
+    );
+}
 
     // Delete product from MongoDB
     await Product.findByIdAndDelete(id);
