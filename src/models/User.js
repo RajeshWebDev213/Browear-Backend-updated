@@ -34,6 +34,28 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+avatar: {
+    url: {
+        type: String,
+        default: "",
+    },
+    public_id: {
+        type: String,
+        default: "",
+    },
+},
+phone: {
+    type: String,
+    default: "",
+},
+dateOfBirth: {
+    type: Date,
+},
+
+address: {
+    type: String,
+    default: "",
+},
   },
   { timestamps: true }
 );

@@ -29,3 +29,29 @@ const uploadImage = async (fileBuffer) => {
 };
 
 export default uploadImage;
+
+export const uploadAvatar = async (buffer) => {
+
+    return new Promise((resolve, reject) => {
+
+        const stream = cloudinary.uploader.upload_stream(
+
+            {
+                folder: "browear/avatar",
+            },
+
+            (error, result) => {
+
+                if (error) return reject(error);
+
+                resolve(result);
+
+            }
+
+        );
+
+        stream.end(buffer);
+
+    });
+
+};
