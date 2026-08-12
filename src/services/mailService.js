@@ -22,5 +22,4 @@ const sendOTPEmail = async (email, otp) => {
     return false;
   }
 };
-console.log("✅ MAIL SERVICE LOADED");
 export default sendOTPEmail;

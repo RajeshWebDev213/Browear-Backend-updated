@@ -7,9 +7,7 @@ import Cart from "../models/Cart.js";
 import Review from "../models/Review.js";
 import Order from "../models/Order.js";
 import mongoose from "mongoose";
-// ===============================
 // GET MY PROFILE
-// ===============================
 export const getProfile = async (req, res) => {
 
     try {
@@ -49,77 +47,62 @@ export const getProfile = async (req, res) => {
     }
 
 };
-// ===============================
 // UPDATE PROFILE
-// ===============================
 export const updateProfile = async (req, res) => {
+  try {
+    console.log("Backend received:", req.body);
 
-    try {
+    const {
+      fullname,
+      gender,
+      phone,
+      dateOfBirth,
+    } = req.body;
 
-        const {
-            fullname,
-            phone,
-            gender,
-        } = req.body;
-
-        const user = await User.findById(req.user._id);
-
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: "User not found",
-            });
-        }
-
-        if (fullname) {
-            user.fullname = fullname;
-        }
-
-        if (phone) {
-            user.phone = phone;
-        }
-
-        if (gender) {
-            user.gender = gender;
-        }
-
-        await user.save();
-
-        return res.status(200).json({
-
-            success: true,
-
-            message: "Profile updated successfully",
-
-            user: {
-                _id: user._id,
-                fullname: user.fullname,
-                email: user.email,
-                phone: user.phone,
-                gender: user.gender,
-                role: user.role,
-            },
-
-        });
-
-    } catch (error) {
-
-        console.log(error);
-
-        return res.status(500).json({
-
-            success: false,
-
-            message: "Internal Server Error",
-
-        });
-
+    if (
+      !fullname ||
+      !gender ||
+      !phone ||
+      !dateOfBirth
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
+      });
     }
 
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    user.fullname = fullname;
+    user.gender = gender;
+    user.phone = phone;
+    user.dateOfBirth = dateOfBirth;
+
+    await user.save();
+console.log("Saved User:", user);
+    return res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      user,
+    });
+
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
 };
-// ===============================
 // UPLOAD PROFILE PICTURE
-// ===============================
 export const uploadProfilePicture = async (req, res) => {
 
     try {
@@ -198,9 +181,7 @@ export const uploadProfilePicture = async (req, res) => {
     }
 
 };
-// ===============================
 // CHANGE PASSWORD
-// ===============================
 export const changePassword = async (req, res) => {
 
     try {
@@ -299,9 +280,7 @@ if (samePassword) {
     }
 
 };
-// ===============================
 // DELETE ACCOUNT
-// ===============================
 export const deleteAccount = async (req, res) => {
 
     try {
@@ -390,9 +369,7 @@ export const deleteAccount = async (req, res) => {
     }
 
 };
-// ===============================
 // ADMIN - GET ALL USERS
-// ===============================
 export const getAllUsers = async (req, res) => {
 
     try {
@@ -453,9 +430,7 @@ return res.status(200).json({
     }
 
 };
-// ===============================
 // ADMIN - GET SINGLE USER
-// ===============================
 export const getSingleUser = async (req, res) => {
 
     try {
@@ -507,9 +482,7 @@ export const getSingleUser = async (req, res) => {
     }
 
 };
-// ===============================
 // ADMIN - UPDATE USER ROLE
-// ===============================
 export const updateUserRole = async (req, res) => {
 
     try {
@@ -608,9 +581,7 @@ export const updateUserRole = async (req, res) => {
     }
 
 };
-// ===============================
 // ADMIN - DELETE USER
-// ===============================
 export const adminDeleteUser = async (req, res) => {
 
     try {
@@ -702,9 +673,7 @@ export const adminDeleteUser = async (req, res) => {
     }
 
 };
-// ===============================
 // ADMIN - USER STATISTICS
-// ===============================
 export const getUserStatistics = async (req, res) => {
 
     try {

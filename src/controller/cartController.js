@@ -3,15 +3,14 @@ import mongoose from "mongoose";
 import Cart from "../models/Cart.js";
 import Product from "../models/Product.js";
 import sendOrderEmail from "../services/orderService.js";
-// ===============================
+
 // ADD TO CART
-// ===============================
 export const addToCart = async (req, res) => {
-
     try {
-
         const { productId } = req.params;
+        const { size } = req.body;
 
+        // Validate product ID
         if (!mongoose.Types.ObjectId.isValid(productId)) {
             return res.status(400).json({
                 success: false,
@@ -19,6 +18,15 @@ export const addToCart = async (req, res) => {
             });
         }
 
+        // Validate size
+        if (!size) {
+            return res.status(400).json({
+                success: false,
+                message: "Please select a size.",
+            });
+        }
+
+        // Find product
         const product = await Product.findById(productId);
 
         if (!product) {
@@ -28,19 +36,31 @@ export const addToCart = async (req, res) => {
             });
         }
 
+        // Check stock
         if (product.stock <= 0) {
             return res.status(400).json({
                 success: false,
                 message: "Product is out of stock",
             });
         }
-
+           
+        // Check whether this product + size already exists
         const cartItem = await Cart.findOne({
             user: req.user._id,
             product: productId,
+            size,
         });
 
+     
+        // ITEM ALREADY EXISTS
         if (cartItem) {
+
+            if (cartItem.quantity + 1 > product.stock) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Only ${product.stock} items available`,
+                });
+            }
 
             cartItem.quantity += 1;
 
@@ -51,13 +71,16 @@ export const addToCart = async (req, res) => {
                 message: "Cart quantity updated",
                 cartItem,
             });
-
         }
+
+        // NEW CART ITEM
+     
 
         const newCartItem = await Cart.create({
             user: req.user._id,
             product: productId,
             quantity: 1,
+            size,
         });
 
         return res.status(201).json({
@@ -68,19 +91,15 @@ export const addToCart = async (req, res) => {
 
     } catch (error) {
 
-        console.log(error);
 
-        return res.status(500).json({
-            success: false,
-            message: "Internal Server Error",
-        });
-
-    }
-
+    return res.status(500).json({
+        success: false,
+        message: error.message,
+    });
+}
 };
-// ===============================
 // GET USER CART
-// ===============================
+
 export const getCart = async (req, res) => {
 
     try {
@@ -125,15 +144,19 @@ export const getCart = async (req, res) => {
     }
 
 };
-// ===============================
 // UPDATE CART QUANTITY
-// ===============================
 export const updateCartQuantity = async (req, res) => {
 
     try {
 
         const { productId } = req.params;
-        const { quantity } = req.body;
+        const {
+
+    quantity,
+
+    size,
+
+} = req.body;
 
         if (!mongoose.Types.ObjectId.isValid(productId)) {
             return res.status(400).json({
@@ -149,10 +172,15 @@ export const updateCartQuantity = async (req, res) => {
             });
         }
 
-        const cartItem = await Cart.findOne({
-            user: req.user._id,
-            product: productId,
-        });
+       const cartItem = await Cart.findOne({
+
+    user: req.user._id,
+
+    product: productId,
+
+    size,
+
+});
 
         if (!cartItem) {
             return res.status(404).json({
@@ -192,11 +220,7 @@ export const updateCartQuantity = async (req, res) => {
     }
 
 };
-
-
-// ===============================
 // REMOVE FROM CART
-// ===============================
 export const removeFromCart = async (req, res) => {
 
     try {
@@ -210,10 +234,17 @@ export const removeFromCart = async (req, res) => {
             });
         }
 
-        const cartItem = await Cart.findOneAndDelete({
-            user: req.user._id,
-            product: productId,
-        });
+        const { size } = req.body;
+
+const cartItem = await Cart.findOneAndDelete({
+
+    user: req.user._id,
+
+    product: productId,
+
+    size,
+
+});
 
         if (!cartItem) {
             return res.status(404).json({
@@ -239,9 +270,7 @@ export const removeFromCart = async (req, res) => {
     }
 
 };
-// ===============================
 // CLEAR CART
-// ===============================
 export const clearCart = async (req, res) => {
 
     try {
@@ -290,9 +319,9 @@ return res.status(201).json({
     }
 
 };
-// ===============================
+
 // GET CART COUNT
-// ===============================
+
 export const getCartCount = async (req, res) => {
 
     try {
@@ -335,9 +364,9 @@ export const getCartCount = async (req, res) => {
     }
 
 };
-// ===============================
+
 // CART SUMMARY
-// ===============================
+
 export const getCartSummary = async (req, res) => {
 
     try {
@@ -421,9 +450,9 @@ export const getCartSummary = async (req, res) => {
 
 };
 
-// =================================
+
 // CHECKOUT VALIDATION
-// =================================
+
 export const checkoutValidation = async (req, res) => {
 
     try {
@@ -485,6 +514,7 @@ export const checkoutValidation = async (req, res) => {
                 productId: product._id,
                 name: product.name,
                 quantity: item.quantity,
+                size: item.size,
                 price: finalPrice,
                 image: product.image,
             });

@@ -28,7 +28,15 @@ router.get("/", auth, getCart);
 
 router.delete("/", auth, clearCart);
 
-router.post("/:productId", auth, addToCart);
+router.post("/:productId", (req, res, next) => {
+
+    console.log("🔥 CART ROUTE HIT");
+    console.log("Product ID:", req.params.productId);
+    console.log("Body:", req.body);
+
+    next();
+
+}, auth, addToCart);
 
 router.put("/:productId", auth, updateCartQuantity);
 

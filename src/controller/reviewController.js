@@ -2,10 +2,8 @@ import mongoose from "mongoose";
 
 import Review from "../models/Review.js";
 import Product from "../models/Product.js";
-
-// ===============================
+import Order from "../models/Order.js";
 // ADD REVIEW
-// ===============================
 export const addReview = async (req, res) => {
 
     try {
@@ -36,6 +34,37 @@ export const addReview = async (req, res) => {
                 message: "Product not found",
             });
         }
+        const hasPurchased =
+    await Order.findOne({
+
+        user: req.user._id,
+
+        orderStatus: "Delivered",
+
+        orderItems: {
+
+            $elemMatch: {
+
+                product: productId,
+
+            },
+
+        },
+
+    });
+
+if (!hasPurchased) {
+
+    return res.status(403).json({
+
+        success: false,
+
+        message:
+            "Only customers who purchased and received this product can review it.",
+
+    });
+
+}
 
         const alreadyReviewed = await Review.findOne({
 
@@ -95,9 +124,47 @@ export const addReview = async (req, res) => {
     }
 
 };
-// ===============================
+// ADMIN - GET ALL REVIEWS
+export const getAllReviews = async (req, res) => {
+    try {
+
+        const reviews = await Review.find()
+            .populate(
+                "user",
+                "fullname email avatar"
+            )
+            .populate(
+                "product",
+                "name brand images"
+            )
+            .sort({
+                createdAt: -1,
+            });
+
+        console.log(
+            "ADMIN REVIEWS:",
+            JSON.stringify(reviews, null, 2)
+        );
+
+        return res.status(200).json({
+            success: true,
+            count: reviews.length,
+            reviews,
+        });
+
+    } catch (error) {
+
+        console.log("GET ALL REVIEWS ERROR:");
+        console.log(error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error",
+        });
+
+    }
+};
 // GET PRODUCT REVIEWS
-// ===============================
 export const getProductReviews = async (req, res) => {
 
     try {
@@ -123,7 +190,7 @@ export const getProductReviews = async (req, res) => {
         const reviews = await Review.find({
             product: productId,
         })
-        .populate("user", "fullname")
+        .populate("user", "fullname_id")
         .sort({ createdAt: -1 });
 
         return res.status(200).json({
@@ -151,11 +218,7 @@ export const getProductReviews = async (req, res) => {
     }
 
 };
-
-
-// ===============================
 // UPDATE REVIEW
-// ===============================
 export const updateReview = async (req, res) => {
 
     try {
@@ -208,7 +271,7 @@ export const updateReview = async (req, res) => {
 
         await review.save();
 
-        await updateProductRating(productId);
+        await updateProductRating(review.product);
 
         return res.status(200).json({
 
@@ -235,9 +298,7 @@ export const updateReview = async (req, res) => {
     }
 
 };
-// ===============================
 // DELETE REVIEW
-// ===============================
 export const deleteReview = async (req, res) => {
 
     try {
@@ -303,10 +364,7 @@ await updateProductRating(productId);
     }
 
 };
-
-// ===============================
 // UPDATE PRODUCT RATING
-// ===============================
 const updateProductRating = async (productId) => {
 
     const reviews = await Review.find({
@@ -346,10 +404,7 @@ const updateProductRating = async (productId) => {
     );
 
 };
-
-// ===============================
 // ADMIN DELETE REVIEW
-// ===============================
 export const adminDeleteReview = async (req, res) => {
 
     try {
@@ -405,9 +460,7 @@ export const adminDeleteReview = async (req, res) => {
     }
 
 };
-// ===============================
 // ADMIN REVIEW STATISTICS
-// ===============================
 export const getReviewStats = async (req, res) => {
 
     try {
@@ -513,4 +566,45 @@ export const getReviewStats = async (req, res) => {
 
     }
 
+};
+export const getReviewById = async (req, res) => {
+    try {
+
+        const { reviewId } = req.params;
+
+        const review = await Review.findById(reviewId)
+            .populate(
+                "user",
+                "fullname email avatar"
+            )
+            .populate(
+                "product",
+                "name brand images"
+            );
+
+        if (!review) {
+            return res.status(404).json({
+                success: false,
+                message: "Review not found",
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            review,
+        });
+
+    } catch (error) {
+
+        console.log(
+            "GET REVIEW BY ID ERROR:",
+            error
+        );
+
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error",
+        });
+
+    }
 };

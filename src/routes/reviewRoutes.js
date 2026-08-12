@@ -4,21 +4,29 @@ import auth from "../middleware/authMiddleware.js";
 import admin from "../middleware/adminMiddleware.js";
 
 import {
-
     addReview,
-
     getProductReviews,
-
     updateReview,
-
     deleteReview,
-
+    getAllReviews,
+    getReviewById,
     adminDeleteReview,
-    getReviewStats
-
+    getReviewStats,
 } from "../controller/reviewController.js";
 
 const router = express.Router();
+// PRODUCT REVIEWS
+router.get(
+    "/product/:productId",
+    getProductReviews
+);
+// ADMIN ROUTES
+router.get(
+    "/admin/all",
+    auth,
+    admin,
+    getAllReviews
+);
 
 router.get(
     "/admin/stats",
@@ -27,9 +35,12 @@ router.get(
     getReviewStats
 );
 
-router.post("/:productId", auth, addReview);
-
-router.get("/:productId", getProductReviews);
+router.get(
+    "/admin/:reviewId",
+    auth,
+    admin,
+    getReviewById
+);
 
 router.delete(
     "/admin/:reviewId",
@@ -38,8 +49,26 @@ router.delete(
     adminDeleteReview
 );
 
-router.put("/:reviewId", auth, updateReview);
+// USER ROUTES
 
-router.delete("/:reviewId", auth, deleteReview);
+
+router.post(
+    "/:productId",
+    auth,
+    addReview
+);
+
+router.put(
+    "/:reviewId",
+    auth,
+    updateReview
+);
+
+router.delete(
+    "/:reviewId",
+    auth,
+    deleteReview
+);
+
 
 export default router;

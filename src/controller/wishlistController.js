@@ -1,10 +1,7 @@
 import mongoose from "mongoose";
 import Wishlist from "../models/Wishlist.js";
 import Product from "../models/Product.js";
-
-// ============================
 // ADD TO WISHLIST
-// ============================
 export const addToWishlist = async (req,res)=>{
 
     try{
@@ -63,9 +60,7 @@ export const addToWishlist = async (req,res)=>{
     }
 
 };
-// =================================
 // GET USER WISHLIST
-// =================================
 export const getWishlist = async (req, res) => {
     try {
 
@@ -97,11 +92,7 @@ export const getWishlist = async (req, res) => {
 
     }
 };
-
-
-// ============================
 // REMOVE FROM WISHLIST
-// ============================
 export const removeFromWishlist = async (req, res) => {
     try {
 
@@ -142,11 +133,7 @@ export const removeFromWishlist = async (req, res) => {
 
     }
 };
-
-
-// =================================
 // TOGGLE WISHLIST
-// =================================
 export const toggleWishlist = async (req, res) => {
     try {
 
@@ -208,9 +195,7 @@ export const toggleWishlist = async (req, res) => {
 
     }
 };
-// =================================
 // GET WISHLIST COUNT
-// =================================
 export const getWishlistCount = async (req, res) => {
     try {
 

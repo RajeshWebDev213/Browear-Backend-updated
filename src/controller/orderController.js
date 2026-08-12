@@ -4,9 +4,7 @@ import Product from "../models/Product.js";
 import mongoose from "mongoose";
 import User from "../models/User.js";
 import sendOrderEmail from "../services/orderService.js";
-// =================================
 // PLACE ORDER (COD)
-// =================================
 export const placeOrder = async (req, res) => {
 
     try {
@@ -71,9 +69,7 @@ export const placeOrder = async (req, res) => {
                 });
             }
 
-            const finalPrice =
-                product.price -
-                (product.price * product.discount) / 100;
+            const finalPrice = product.price - (product.price * product.discount) / 100;
 
             subtotal += finalPrice * item.quantity;
 
@@ -81,19 +77,21 @@ export const placeOrder = async (req, res) => {
                 (product.price - finalPrice) *
                 item.quantity;
 
-            orderItems.push({
+           orderItems.push({
 
-                product: product._id,
+    product: product._id,
 
-                name: product.name,
+    name: product.name,
 
-                image: product.images[0]?.url || "",
+    image: product.images[0]?.url || "",
 
-                price: finalPrice,
+    price: finalPrice,
 
-                quantity: item.quantity,
+    quantity: item.quantity,
 
-            });
+    size: item.size,
+
+});
 
         }
 
@@ -195,9 +193,7 @@ export const placeOrder = async (req, res) => {
     }
 
 };
-// =================================
 // GET MY ORDERS
-// =================================
 export const getMyOrders = async (req, res) => {
 
     try {
@@ -234,11 +230,7 @@ export const getMyOrders = async (req, res) => {
     }
 
 };
-
-
-// =================================
 // GET SINGLE ORDER
-// =================================
 export const getSingleOrder = async (req, res) => {
 
     try {
@@ -297,23 +289,114 @@ export const getSingleOrder = async (req, res) => {
     }
 
 };
-
-// =================================
-// CANCEL ORDER
-// =================================
-export const cancelOrder = async (req, res) => {
+// ADMIN GET SINGLE ORDER
+export const getAdminSingleOrder = async (req, res) => {
 
     try {
 
         const { orderId } = req.params;
 
         if (!mongoose.Types.ObjectId.isValid(orderId)) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message: "Invalid Order ID",
+
+            });
+
+        }
+
+        const order = await Order.findById(orderId)
+
+            .populate(
+                "user",
+                "fullname email phone avatar"
+            );
+
+        if (!order) {
+
+            return res.status(404).json({
+
+                success: false,
+
+                message: "Order not found",
+
+            });
+
+        }
+
+        return res.status(200).json({
+
+            success: true,
+
+            order,
+
+        });
+
+    }
+
+    catch (error) {
+
+        console.log(error);
+
+        return res.status(500).json({
+
+            success: false,
+
+            message: "Internal Server Error",
+
+        });
+
+    }
+
+};
+// CANCEL ORDER
+export const cancelOrder = async (req, res) => {
+
+    try {
+
+        const { orderId } = req.params;
+        const {
+
+    reason,
+
+    customReason,
+
+} = req.body;
+        if (!mongoose.Types.ObjectId.isValid(orderId)) {
             return res.status(400).json({
                 success: false,
                 message: "Invalid Order ID",
             });
         }
+       if (!reason) {
 
+    return res.status(400).json({
+
+        success: false,
+
+        message: "Please select a cancellation reason.",
+
+    });
+
+}
+
+if (
+    reason === "Other" &&
+    !customReason?.trim()
+) {
+
+    return res.status(400).json({
+
+        success: false,
+
+        message: "Please enter your cancellation reason.",
+
+    });
+
+}
         const order = await Order.findOne({
             _id: orderId,
             user: req.user._id,
@@ -362,6 +445,16 @@ export const cancelOrder = async (req, res) => {
 
         order.orderStatus = "Cancelled";
 
+order.cancelReason =
+
+    reason === "Other"
+
+        ? customReason
+
+        : reason;
+
+order.cancelledAt = new Date();
+
         await order.save();
         const user = await User.findById(order.user);
 
@@ -374,7 +467,11 @@ await sendOrderEmail(
     "Your Order has been Cancelled",
 
     `Your order #${order._id}
-     has been cancelled successfully.`
+has been cancelled successfully.
+
+Reason:
+${order.cancelReason}`
+
 
 );
 
@@ -403,9 +500,7 @@ await sendOrderEmail(
     }
 
 };
-// =================================
 // ADMIN - GET ALL ORDERS
-// =================================
 export const getAllOrders = async (req, res) => {
 
     try {
@@ -439,11 +534,7 @@ export const getAllOrders = async (req, res) => {
     }
 
 };
-
-
-// =================================
 // ADMIN - UPDATE ORDER STATUS
-// =================================
 export const updateOrderStatus = async (req, res) => {
 
     try {
@@ -586,9 +677,7 @@ await sendOrderEmail(
     }
 
 };
-// =================================
 // ADMIN - ORDER STATISTICS
-// =================================
 export const getOrderStats = async (req, res) => {
 
     try {

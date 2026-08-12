@@ -12,9 +12,9 @@ import {
 import sendOTPEmail from "../services/mailService.js";
 
 
-// ===============================
+
 // SEND OTP
-// ===============================
+
 export const sendOTP = async (req, res) => {
 
   try {
@@ -68,22 +68,22 @@ export const sendOTP = async (req, res) => {
 };
 
 
-// ===============================
+
 // VERIFY OTP
-// ===============================
+
 export const verifyOTP = async (req, res) => {
 
   try {
 
     const {
-      fullname,
+  
       email,
       password,
       otp,
     } = req.body;
 
     if (
-      !fullname ||
+    
       !email ||
       !password ||
       !otp
@@ -121,11 +121,11 @@ export const verifyOTP = async (req, res) => {
       await bcrypt.hash(password, 10);
 
     const user = await User.create({
-      fullname,
       email,
       password: hashedPassword,
       isVerified: true,
     });
+
 
     const token = generateToken(user._id);
 
@@ -166,10 +166,40 @@ export const verifyOTP = async (req, res) => {
   }
 
 };
+export const resendOTP = async (req, res) => {
 
-// ===============================
+  try {
+
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required",
+      });
+    }
+
+    await sendOTPService(email);
+
+    return res.status(200).json({
+      success: true,
+      message: "OTP sent successfully",
+    });
+
+  } catch (error) {
+    console.log(error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+    
+
+  }
+
+};
+
 // LOGIN
-// ===============================
+
 export const login = async (req, res) => {
 
     try {
@@ -186,23 +216,21 @@ export const login = async (req, res) => {
 
         }
 
-        const user = await User.findOne({ email });
-        if (!user.isVerified) {
-   return res.status(401).json({
-      success:false,
-      message:"Please verify your email first"
-   });
+const user = await User.findOne({ email });
+
+if (!user) {
+    return res.status(404).json({
+        success: false,
+        message: "User not found",
+    });
 }
 
-        if (!user) {
-
-            return res.status(404).json({
-                success: false,
-                message: "User not found",
-            });
-
-        }
-
+if (!user.isVerified) {
+    return res.status(401).json({
+        success: false,
+        message: "Please verify your email first",
+    });
+}
         const isMatch = await bcrypt.compare(
             password,
             user.password
@@ -218,7 +246,7 @@ export const login = async (req, res) => {
         }
 
         const token = generateToken(user._id);
-
+    
         return res.status(200).json({
 
             success: true,
@@ -254,9 +282,9 @@ export const login = async (req, res) => {
 
 };
 
-// ===============================
+
 // GET CURRENT USER
-// ===============================
+
 export const me = async (req, res) => {
 
     try {
@@ -282,9 +310,9 @@ export const me = async (req, res) => {
     }
 
 };
-// ===============================
+
 // LOGOUT
-// ===============================
+
 export const logout = async (req, res) => {
 
     return res.status(200).json({

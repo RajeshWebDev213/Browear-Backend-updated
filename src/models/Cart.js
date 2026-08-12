@@ -13,6 +13,10 @@ const cartSchema = new mongoose.Schema(
             ref: "Product",
             required: true,
         },
+        size: {
+    type: String,
+    required: true,
+},
 
         quantity: {
             type: Number,
@@ -26,7 +30,7 @@ const cartSchema = new mongoose.Schema(
 );
 
 cartSchema.index(
-    { user: 1, product: 1 },
+    { user: 1, product: 1, size :1 },
     { unique: true }
 );
 

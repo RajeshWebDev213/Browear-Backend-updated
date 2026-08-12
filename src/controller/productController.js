@@ -1,31 +1,31 @@
 import Product from "../models/Product.js";
 import uploadImage from "../services/cloudnaryService.js";
 import cloudinary from "../config/cloudnary.js";
-
-// =================================
+import Order from "../models/Order.js";
 // ADD PRODUCT
-// =================================
 export const addProduct = async (req, res) => {
   
   try {
-    const {
-      name,
-      description,
-      category,
-      brand,
-      price,
-      discount,
-      stock,
-    } = req.body;
+   const {
+  name,
+  description,
+  category,
+  brand,
+  price,
+  discount,
+  stock,
+  sizes,
+} = req.body;
 
-    if (
-      !name ||
-      !description ||
-      !category ||
-      !brand ||
-      !price ||
-      !stock
-    ) {
+  if (
+  !name ||
+  !description ||
+  !category ||
+  !brand ||
+  !price ||
+  !stock ||
+  !sizes
+) {
       return res.status(400).json({
         success: false,
         message: "All required fields are mandatory",
@@ -41,22 +41,23 @@ export const addProduct = async (req, res) => {
 
     // Upload image to Cloudinary
     const uploadedImage = await uploadImage(req.file.buffer);
-
-    const product = await Product.create({
-      name,
-      description,
-      category,
-      brand,
-      price,
-      discount: discount || 0,
-      stock,
-       images: [
-        {
-            url: uploadedImage.secure_url,
-            public_id: uploadedImage.public_id,
-        },
-    ],
-    });
+     const parsedSizes = JSON.parse(sizes);
+  const product = await Product.create({
+  name,
+  description,
+  category,
+  brand,
+  price,
+  discount: discount || 0,
+  stock,
+  sizes: parsedSizes,
+  images: [
+    {
+      url: uploadedImage.secure_url,
+      public_id: uploadedImage.public_id,
+    },
+  ],
+});
 
     return res.status(201).json({
       success: true,
@@ -73,14 +74,7 @@ export const addProduct = async (req, res) => {
     });
   }
 };
-
-
-// =================================
 // GET ALL PRODUCTS
-// =================================
-// =================================
-// GET ALL PRODUCTS
-// =================================
 export const getProducts = async (req, res) => {
     try {
 
@@ -206,10 +200,7 @@ if (brand) {
 
     }
 };
-
-// =================================
 // GET SINGLE PRODUCT
-// =================================
 export const getProduct = async (req, res) => {
   try {
 
@@ -238,10 +229,7 @@ export const getProduct = async (req, res) => {
     });
   }
 };
-
-// =================================
 // GET PRODUCTS BY CATEGORY
-// =================================
 export const getProductsByCategory = async (req, res) => {
   try {
 
@@ -266,11 +254,7 @@ export const getProductsByCategory = async (req, res) => {
     });
   }
 };
-
-
-// =================================
 // UPDATE PRODUCT
-// =================================
 export const updateProduct = async (req, res) => {
     try {
 
@@ -366,9 +350,7 @@ export const updateProduct = async (req, res) => {
 
     }
 };
-// =================================
 // DELETE PRODUCT
-// =================================
 export const deleteProduct = async (req, res) => {
   try {
 
@@ -408,4 +390,144 @@ export const deleteProduct = async (req, res) => {
     });
 
   }
+};
+
+// TRENDING PRODUCTS
+
+
+export const getTrendingProducts = async (req, res) => {
+    try {
+
+        const products = await Product.find({
+            isAvailable: true,
+            stock: { $gt: 0 },
+        })
+            .sort({
+                createdAt: -1,
+            })
+            .limit(10);
+
+        return res.status(200).json({
+            success: true,
+            products,
+        });
+
+    } catch (error) {
+
+        console.log(
+            "TRENDING PRODUCTS ERROR:",
+            error
+        );
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch trending products",
+        });
+
+    }
+};
+// 50% OFF PRODUCTS
+export const getOfferProducts = async (req, res) => {
+    try {
+
+        const products = await Product.find({
+            isAvailable: true,
+            stock: { $gt: 0 },
+            discount: { $gte: 50 },
+        })
+            .sort({
+                discount: -1,
+            })
+            .limit(10);
+
+        return res.status(200).json({
+            success: true,
+            products,
+        });
+
+    } catch (error) {
+
+        console.log(
+            "OFFER PRODUCTS ERROR:",
+            error
+        );
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch offer products",
+        });
+
+    }
+};
+// BEST SELLERS
+export const getBestSellerProducts = async (req, res) => {
+    try {
+
+        const bestSellers = await Order.aggregate([
+
+            {
+                $match: {
+                    orderStatus: {
+                        $ne: "Cancelled",
+                    },
+                },
+            },
+
+            {
+                $unwind: "$orderItems",
+            },
+
+            {
+                $group: {
+                    _id: "$orderItems.product",
+
+                    totalSold: {
+                        $sum: "$orderItems.quantity",
+                    },
+                },
+            },
+
+            {
+                $sort: {
+                    totalSold: -1,
+                },
+            },
+
+            {
+                $limit: 10,
+            },
+
+        ]);
+
+        const productIds =
+            bestSellers.map(
+                (item) => item._id
+            );
+
+        const products =
+            await Product.find({
+                _id: {
+                    $in: productIds,
+                },
+                isAvailable: true,
+            });
+
+        return res.status(200).json({
+            success: true,
+            products,
+        });
+
+    } catch (error) {
+
+        console.log(
+            "BEST SELLER ERROR:",
+            error
+        );
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch best sellers",
+        });
+
+    }
 };

@@ -6,6 +6,7 @@ import {
     placeOrder,
     getMyOrders,
     getSingleOrder,
+    getAdminSingleOrder,
     cancelOrder,
     getAllOrders,
     updateOrderStatus,
@@ -29,7 +30,7 @@ router.put(
     admin,
     updateOrderStatus
 );
-
+router.get("/admin/:orderId",auth,admin,getAdminSingleOrder)
 router.get("/:orderId", auth, getSingleOrder);
 
 router.put("/:orderId/cancel", auth, cancelOrder);

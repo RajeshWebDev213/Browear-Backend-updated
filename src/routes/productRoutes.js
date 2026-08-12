@@ -7,6 +7,9 @@ import admin from "../middleware/adminMiddleware.js";
 import {
   addProduct,
   getProducts,
+  getTrendingProducts,
+  getOfferProducts,
+  getBestSellerProducts,
   getProduct,
   getProductsByCategory,
   updateProduct,
@@ -19,7 +22,20 @@ const router = express.Router();
 router.get("/", getProducts);
 
 router.get("/category/:category", getProductsByCategory);
+router.get(
+    "/trending",
+    getTrendingProducts
+);
 
+router.get(
+    "/offers",
+    getOfferProducts
+);
+
+router.get(
+    "/bestseller",
+    getBestSellerProducts
+);
 router.get("/:id", getProduct);
 
 // Update Product
