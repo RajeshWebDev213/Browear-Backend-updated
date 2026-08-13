@@ -256,6 +256,7 @@ export const getProductsByCategory = async (req, res) => {
 };
 // UPDATE PRODUCT
 export const updateProduct = async (req, res) => {
+     
     try {
 
         const { id } = req.params;
@@ -345,7 +346,7 @@ export const updateProduct = async (req, res) => {
 
         return res.status(500).json({
             success: false,
-            message: "Internal Server Error",
+            message: error.message,
         });
 
     }
