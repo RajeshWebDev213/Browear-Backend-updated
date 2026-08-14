@@ -2,10 +2,10 @@
   "name": "browearbackend",
   "version": "1.0.0",
   "type": "module",
-  "scripts": {
-    "start": "node --env-file=.env src/server.js",
-    "dev": "nodemon --env-file=.env src/server.js"
-  },
+ "scripts": {
+  "start": "node src/server.js",
+  "dev": "nodemon --env-file=.env src/server.js"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
