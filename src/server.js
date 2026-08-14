@@ -8,7 +8,7 @@ connectDB();
 app.listen(PORT, () => {
 
     console.log(
-        `🚀 Server Running on Port ${PORT}`
+        `Server Running on Port ${PORT}`
     );
 
 });
